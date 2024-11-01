@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
+#include "debug/MemoryAccess.hh"
 
 namespace gem5
 {
@@ -50,13 +51,19 @@ namespace gem5
 namespace memory
 {
 
-SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
-    AbstractMemory(p),
-    port(name() + ".port", *this), latency(p.latency),
-    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
-    retryReq(false), retryResp(false),
-    releaseEvent([this]{ release(); }, name()),
-    dequeueEvent([this]{ dequeue(); }, name())
+SimpleMemory::SimpleMemory(const SimpleMemoryParams &p)
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      latency(p.latency),
+      latency_var(p.latency_var),
+      latency_stdev(p.latency_stdev),
+      latency_stdev_max(p.latency + (p.latency_stdev * 3)),
+      bandwidth(p.bandwidth),
+      isBusy(false),
+      retryReq(false),
+      retryResp(false),
+      releaseEvent([this] { release(); }, name()),
+      dequeueEvent([this] { dequeue(); }, name())
 {
 }
 
@@ -236,8 +243,15 @@ SimpleMemory::dequeue()
 Tick
 SimpleMemory::getLatency() const
 {
-    return latency +
-        (latency_var ? rng->random<Tick>(0, latency_var) : 0);
+    if (latency_stdev) {
+        Tick lat = std::min(rng->random_norm(latency, latency_stdev),
+                            latency_stdev_max);
+        DPRINTF(MemoryAccess, "Generated latency norm(%d, %d) = %d\n", latency,
+                latency_stdev, lat);
+        return lat;
+    } else {
+        return latency + (latency_var ? rng->random<Tick>(0, latency_var) : 0);
+    }
 }
 
 void
