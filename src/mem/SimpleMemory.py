@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2021 Arm Limited
+# Copyright (c) 2012-2013, 2021, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -47,7 +47,9 @@ class SimpleMemory(AbstractMemory):
 
     port = ResponsePort("This port sends responses and receives requests")
     latency = Param.Latency("30ns", "Request to response latency")
+    # use either one or the other, stdev used a normal distribution
     latency_var = Param.Latency("0ns", "Request to response latency variance")
+    latency_stdev = Param.Latency("0ns", "Request to response latency stdev")
     # The memory bandwidth limit default is set to 12.8GiB/s which is
     # representative of a x64 DDR3-1600 channel.
     bandwidth = Param.MemoryBandwidth(
