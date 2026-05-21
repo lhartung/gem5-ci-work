@@ -213,7 +213,7 @@ decode QUADRANT default Unknown::unknown() {
                     return std::make_shared<IllegalInstFault>(
                             "source reg x0", machInst);
                 }
-                Rc1_sw = (int32_t)(Rc1_sw + imm);
+                Rc1_sd = szext<32>((int32_t)Rc1_sd + imm);
             }});
         }
         0x2: CIOp::c_li({{
@@ -301,12 +301,12 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: decode CFUNCT2LOW {
                         0x0: decode RVTYPE {
                             0x1: c_subw({{
-                                Rp1_sd = (int32_t)Rp1_sd - Rp2_sw;
+                                Rp1_sd = szext<32>((int32_t)Rp1_sd - Rp2_sw);
                             }});
                         }
                         0x1: decode RVTYPE {
                             0x1: c_addw({{
-                                Rp1_sd = (int32_t)Rp1_sd + Rp2_sw;
+                                Rp1_sd = szext<32>((int32_t)Rp1_sd + Rp2_sw);
                             }});
                         }
                         0x2: c_mul({{
@@ -1677,11 +1677,11 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode FUNCT3 {
                 format IOp {
                     0x0: addiw({{
-                        Rd_sw = (int32_t)(Rs1_sw + imm);
+                        Rd_sd = szext<32>(Rs1_sw + imm);
                     }}, int32_t);
                     0x1: decode FS3 {
                         0x0: slliw({{
-                            Rd_sd = Rs1_sw << imm;
+                            Rd_sd = szext<32>(Rs1_sw << imm);
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0x1: slli_uw({{
@@ -1702,11 +1702,11 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x5: decode FS3 {
                         0x0: srliw({{
-                            Rd_sd = (int32_t)(Rs1_uw >> imm);
+                            Rd_sd = szext<32>((int32_t)(Rs1_uw >> imm));
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0x8: sraiw({{
-                            Rd_sd = Rs1_sw >> imm;
+                            Rd_sd = szext<32>(Rs1_sw >> imm);
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0xc: roriw({{
@@ -2068,7 +2068,7 @@ decode QUADRANT default Unknown::unknown() {
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
-                }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
+                }}, mem_flags=[LLSC], xlate_flags=['LR']);
                 0x3: StoreCond::sc_w({{
                     Mem_uw = Rs2_uw;
                 }}, {{
@@ -2174,7 +2174,7 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: decode AMOFUNCT {
                     0x2: LoadReserved::lr_d({{
                         Rd_sd = Mem_sd;
-                    }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
+                    }}, mem_flags=[LLSC], xlate_flags=['LR']);
                     0x3: StoreCond::sc_d({{
                         Mem = Rs2;
                     }}, {{
@@ -2622,21 +2622,21 @@ decode QUADRANT default Unknown::unknown() {
                 format ROp {
                     0x0: decode FUNCT7 {
                         0x0: addw({{
-                            Rd_sd = Rs1_sw + Rs2_sw;
+                            Rd_sd = szext<32>(Rs1_sw + Rs2_sw);
                         }});
                         0x1: mulw({{
-                            Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
+                            Rd_sd = szext<32>((int32_t)(Rs1_sw*Rs2_sw));
                         }}, IntMultOp);
                         0x4: add_uw({{
                             Rd = Rs1_uw + Rs2;
                         }});
                         0x20: subw({{
-                            Rd_sd = Rs1_sw - Rs2_sw;
+                            Rd_sd = szext<32>(Rs1_sw - Rs2_sw);
                         }});
                     }
                     0x1: decode FUNCT7 {
                         0x0: sllw({{
-                            Rd_sd = Rs1_sw << Rs2<4:0>;
+                            Rd_sd = szext<32>(Rs1_sw << Rs2<4:0>);
                         }});
                         0x30: rolw({{
                             int shamt = Rs2 & (32 - 1);
@@ -2651,7 +2651,7 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x4: decode FUNCT7 {
                         0x1: divw({{
-                            Rd_sd = div<int32_t>(Rs1, Rs2);
+                            Rd_sd = szext<32>(div<int32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x4: packw({{
                             Rd_sd = sext<32>((Rs2_uh << 16) | Rs1_uh);
@@ -2662,13 +2662,13 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x5: decode FUNCT7 {
                         0x0: srlw({{
-                            Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
+                            Rd_sd = szext<32>((int32_t)(Rs1_uw >> Rs2<4:0>));
                         }});
                         0x1: divuw({{
-                            Rd = sext<32>(divu<uint32_t>(Rs1, Rs2));
+                            Rd = szext<32>(divu<uint32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x20: sraw({{
-                            Rd_sd = Rs1_sw >> Rs2<4:0>;
+                            Rd_sd = szext<32>(Rs1_sw >> Rs2<4:0>);
                         }});
                         0x30: rorw({{
                             int shamt = Rs2 & (32 - 1);
@@ -2678,14 +2678,14 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x6:  decode FUNCT7 {
                         0x1: remw({{
-                            Rd_sd = rem<int32_t>(Rs1, Rs2);
+                            Rd_sd = szext<32>(rem<int32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x10: sh3add_uw({{
                             Rd = (((uint64_t)Rs1_uw) << 3) + Rs2;
                         }});
                     }
                     0x7: remuw({{
-                        Rd = sext<32>(remu<uint32_t>(Rs1, Rs2));
+                        Rd = szext<32>(remu<uint32_t>(Rs1, Rs2));
                     }}, IntDivOp);
                 }
             }
@@ -6302,7 +6302,8 @@ decode QUADRANT default Unknown::unknown() {
                                         machInst);
                         }
 
-                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                            demapPage(xc->tcBase(), Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
 
                     0xb: sinval_vvma({{
@@ -6338,7 +6339,8 @@ decode QUADRANT default Unknown::unknown() {
                                         "hfence needs at least S priv",
                                         machInst);
                         }
-                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                            demapPage(xc->tcBase(), Rs1, Rs2, false, true);
                         return NoFault;
 
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
@@ -6432,7 +6434,8 @@ decode QUADRANT default Unknown::unknown() {
                                             "hfence in U or TVM on",
                                             machInst);
                             }
-                            xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                            static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                                demapPage(xc->tcBase(), Rs1, Rs2, true);
                             return NoFault;
 
                         }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
@@ -6481,76 +6484,48 @@ decode QUADRANT default Unknown::unknown() {
                 0x30: decode RS2 {
                     0x0: HyperLoad::hlv_b({{
                         Rd_sd = Mem_sb;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_bu({{
                         Rd = Mem_ub;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 }
                 0x31: HyperStore::hsv_b({{
                     Mem_ub = Rs2_ub;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x32: decode RS2 {
                     0x0: HyperLoad::hlv_h({{
                         Rd_sd = Mem_sh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_hu({{
                         Rd = Mem_uh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x3: HyperLoad::hlvx_hu({{
                         Rd = Mem_uh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
-                        'ARCH_BITS & XlateFlags::HLVX'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT', 'HLVX']);
                 }
                 0x33: HyperStore::hsv_h({{
                         Mem_uh = Rs2_uh
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x34: decode RS2 {
                     0x0: HyperLoad::hlv_w({{
                         Rd_sd = Mem_sw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_wu({{
                         Rd = Mem_uw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x3: HyperLoad::hlvx_wu({{
                         Rd = Mem_uw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
-                        'ARCH_BITS & XlateFlags::HLVX'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT', 'HLVX']);
                 }
                 0x35: HyperStore::hsv_w({{
                     Mem_uw = Rs2_uw;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x36: HyperLoad::hlv_d({{
                     Rd_sd = Mem_sd;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x37: HyperStore::hsv_d({{
                     Mem_ud = Rs2_ud;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
 
             }
         }
