@@ -120,7 +120,8 @@ jobs:
                     "get_commit",
                     "get_file_contents",
                     "list_commits",
-                    "search_code"
+                    "search_code",
+                    "run_shell_command"
                   ],
                   "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
