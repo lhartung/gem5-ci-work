@@ -1,5 +1,5 @@
-# Copyright (c) 2020 ARM Limited
-# All rights reserved
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2017 Mark D. Hill and David A. Wood
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,40 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Test file for the util m5 exit assembly instruction.
-"""
+from m5.params import *
+from m5.SimObject import SimObject
 
-import re
 
-from testlib import *
-
-m5_exit_regex = re.compile(
-    r"Exiting @ tick \d* because m5_exit instruction encountered"
-)
-
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
-
-a = verifier.MatchRegex(m5_exit_regex)
-gem5_verify_config(
-    name="m5_exit_test",
-    verifiers=[a],
-    fixtures=(),
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "m5_util",
-        "configs",
-        "simple_binary_run.py",
-    ),
-    config_args=[
-        "x86-m5-exit",
-        "--resource-directory",
-        resource_path,
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-)
+class BackpressureGen(SimObject):
+    type = "BackpressureGen"
+    cxx_header = "mem/ruby/structures/BackpressureGen.hh"
+    cxx_class = "gem5::ruby::BackpressureGen"
+    abstract = True
