@@ -50,7 +50,7 @@ Begin every task by building a complete picture of the situation.
     - **Repository**: !{echo $REPOSITORY}
     - **Additional Context/Request**: !{echo $ADDITIONAL_CONTEXT}
 
-2. **Deepen Context with Tools**: Use `mcp_github_issue_read`, `mcp_github_pull_request_read.get_diff`, and `mcp_github_get_file_contents` to investigate the request thoroughly.
+2. **Deepen Context with Tools**: Use `mcp_github_issue_read`, `mcp_github_pull_request_read` with method `get_diff`, and `mcp_github_get_file_contents` to investigate the request thoroughly.
 
 -----
 
