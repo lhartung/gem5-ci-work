@@ -108,7 +108,12 @@ jobs:
                     "ghcr.io/github/github-mcp-server:v1.0.5"
                   ],
                   "includeTools": [
-                    "all"
+                    "add_comment_to_pending_review",
+                    "pull_request_read",
+                    "pull_request_review_write",
+                    "get_file_contents",
+                    "list_commits",
+                    "search_code"
                   ],
                   "env": {
                     "ALLOW_SHELL_COMMANDS": "true",

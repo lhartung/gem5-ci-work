@@ -51,7 +51,7 @@ For each identified issue, formulate a review comment adhering to the following 
 
 ### Step 3: Submit a Comment on GitHub
 
-1. **Create Comment:** Call `add_comment_to_pending_review`. Ignore errors like "can only have one pending review per pull request" and proceed to the next step.
+1. **Create Comment:** Call `pull_request_review_write`. Ignore errors like "can only have one pending review per pull request" and proceed to the next step.
 
 ## Final Instructions
 
