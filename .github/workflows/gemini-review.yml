@@ -110,7 +110,7 @@ jobs:
                     "get_file_contents",
                     "issue_read",
                     "pull_request_read",
-                    "pull_request_review_write",
+                    "pull_request_review_write"
                   ],
                   "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
