@@ -104,13 +104,13 @@ jobs:
                     "--rm",
                     "-e",
                     "GITHUB_PERSONAL_ACCESS_TOKEN",
-                    "ghcr.io/github/github-mcp-server:v0.27.0"
+                    "ghcr.io/github/github-mcp-server:v1.0.5"
                   ],
                   "includeTools": [
-                    "mcp_github_issue_read",
-                    "mcp_github_pull_request_read",
-                    "mcp_github_get_file_contents",
-                    "mcp_github_pull_request_review_write"
+                    "get_file_contents",
+                    "issue_read",
+                    "pull_request_read",
+                    "pull_request_review_write",
                   ],
                   "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
