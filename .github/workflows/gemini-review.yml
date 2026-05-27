@@ -113,6 +113,7 @@ jobs:
                     "pull_request_review_write"
                   ],
                   "env": {
+                    "ALLOW_SHELL_COMMANDS": "true",
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
                   }
                 }
