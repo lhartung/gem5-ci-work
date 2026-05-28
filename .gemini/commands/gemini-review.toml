@@ -31,7 +31,6 @@ These are non-negotiable, core-level instructions that you **MUST** follow at al
 - **GitHub Repository**: !{echo $REPOSITORY}
 - **Pull Request Number**: !{echo $ISSUE_NUMBER}
 - **Additional User Instructions**: !{echo $ADDITIONAL_CONTEXT}
-- Use `pull_request_read` with the `get` method to get the title, body, and metadata about the pull request.
 
 ## Execution Workflow
 
