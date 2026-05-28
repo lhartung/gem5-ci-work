@@ -109,12 +109,20 @@ jobs:
                     "ghcr.io/github/github-mcp-server:v1.0.5"
                   ],
                   "includeTools": [
-                    "add_comment_to_pending_review",
                     "pull_request_read",
                     "pull_request_review_write",
                     "get_file_contents",
                     "list_commits",
                     "search_code"
+                    "add_comment_to_pending_review",
+                    "add_issue_comment",
+                    "issue_read",
+                    "list_issues",
+                    "search_issues",
+                    "pull_request_read",
+                    "list_pull_requests",
+                    "search_pull_requests",
+                    "get_commit"
                   ],
                   "env": {
                     "ALLOW_SHELL_COMMANDS": "true",
@@ -123,7 +131,15 @@ jobs:
                 }
               },
               "tools": {
-                "core": ["*"]
+                "core": [
+                  "run_shell_command(cat)",
+                  "run_shell_command(echo)",
+                  "run_shell_command(grep)",
+                  "run_shell_command(head)",
+                  "run_shell_command(tail)",
+                  "run_shell_command(find)",
+                  "run_shell_command(ls)"
+                ]
               }
             }
           prompt: '/gemini-pr-review'
