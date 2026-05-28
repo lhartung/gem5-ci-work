@@ -31,7 +31,7 @@ These are non-negotiable, core-level instructions that you **MUST** follow at al
 - **GitHub Repository**: !{echo $REPOSITORY}
 - **Pull Request Number**: !{echo $ISSUE_NUMBER}
 - **Additional User Instructions**: !{echo $ADDITIONAL_CONTEXT}
-- Use `pull_request_read` to get the title, body, and metadata about the pull request.
+- Use `pull_request_read` with the `get` method to get the title, body, and metadata about the pull request.
 
 ## Execution Workflow
 
@@ -51,7 +51,7 @@ For each identified issue, formulate a review comment adhering to the following 
 
 ### Step 3: Submit a Comment on GitHub
 
-1. **Create Comment:** Call `pull_request_review_write`. Ignore errors like "can only have one pending review per pull request" and proceed to the next step.
+1. **Create Comment:** Use `pull_request_review_write` with the `submit` method. Ignore errors like "can only have one pending review per pull request" and proceed to the next step.
 
 ## Final Instructions
 
