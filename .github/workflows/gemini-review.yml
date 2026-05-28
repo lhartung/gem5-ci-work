@@ -40,37 +40,18 @@ jobs:
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
-        with:
-          persist-credentials: 'false'
-
-      - name: 'Prepare prompt context'
-        shell: 'bash'
-        run: |-
-          mkdir -p .gemini
-          jq -n \
-            --arg repo "${REPOSITORY}" \
-            --arg pr "${PULL_REQUEST_NUMBER}" \
-            --arg context "${ADDITIONAL_CONTEXT}" \
-            '{repository: $repo, pull_request_number: $pr, additional_context: $context}' > .gemini/context.json
-        env:
-          REPOSITORY: '${{ github.repository }}'
-          PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
-          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
 
       - name: 'Run Gemini pull request review'
-        uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
+        uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
         id: 'gemini_pr_review'
         env:
-          TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
-          DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
-          EVENT_NAME: '${{ github.event_name }}'
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
-          ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
+          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
+          PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           REPOSITORY: '${{ github.repository }}'
-          OWNER: '${{ github.repository_owner }}'
-          ADDITIONAL_CONTEXT: '${{ steps.extract_command.outputs.additional_context }}'
-          GEMINI_CLI_TRUST_WORKSPACE: 'true'
+          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+          GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
         with:
           gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
           gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
@@ -90,7 +71,7 @@ jobs:
           settings: |-
             {
               "model": {
-                "maxSessionTurns": 50
+                "maxSessionTurns": 25
               },
               "telemetry": {
                 "enabled": true,
@@ -106,26 +87,14 @@ jobs:
                     "--rm",
                     "-e",
                     "GITHUB_PERSONAL_ACCESS_TOKEN",
-                    "ghcr.io/github/github-mcp-server:v1.0.5"
+                    "ghcr.io/github/github-mcp-server:v0.27.0"
                   ],
                   "includeTools": [
-                    "pull_request_read",
-                    "pull_request_review_write",
-                    "get_file_contents",
-                    "list_commits",
-                    "search_code"
                     "add_comment_to_pending_review",
-                    "add_issue_comment",
-                    "issue_read",
-                    "list_issues",
-                    "search_issues",
                     "pull_request_read",
-                    "list_pull_requests",
-                    "search_pull_requests",
-                    "get_commit"
+                    "pull_request_review_write"
                   ],
                   "env": {
-                    "ALLOW_SHELL_COMMANDS": "true",
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
                   }
                 }
@@ -136,10 +105,12 @@ jobs:
                   "run_shell_command(echo)",
                   "run_shell_command(grep)",
                   "run_shell_command(head)",
-                  "run_shell_command(tail)",
-                  "run_shell_command(find)",
-                  "run_shell_command(ls)"
+                  "run_shell_command(tail)"
                 ]
               }
             }
-          prompt: '/gemini-pr-review'
+          extensions: |
+            [
+              "https://github.com/gemini-cli-extensions/code-review"
+            ]
+          prompt: '/pr-code-review'
