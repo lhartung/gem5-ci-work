@@ -68,6 +68,7 @@ jobs:
           IS_PULL_REQUEST: '${{ !!github.event.pull_request }}'
           ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           REPOSITORY: '${{ github.repository }}'
+          OWNER: '${{ github.repository_owner }}'
           ADDITIONAL_CONTEXT: '${{ steps.extract_command.outputs.additional_context }}'
           GEMINI_CLI_TRUST_WORKSPACE: 'true'
         with:
