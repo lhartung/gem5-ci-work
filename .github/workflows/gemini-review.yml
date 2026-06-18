@@ -114,3 +114,28 @@ jobs:
               "https://github.com/lhartung/safe-review"
             ]
           prompt: '/safe-code-review'
+
+      - name: Post Comment
+        uses: actions/github-script@v7
+        id: 'gemini_pr_review'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const geminiOutput = `${{ steps.gemini_pr_review.outputs.summary }}`;
+            const issueNumber = context.payload.pull_request
+              ? context.payload.pull_request.number
+              : context.payload.issue.number;
+
+            if (!issueNumber) {
+              core.setFailed("Could not determine the Issue or PR number.");
+              return;
+            }
+
+            const commentBody = `🤖 **Safe Review Output:**\n\n${geminiOutput}`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: commentBody
+            });
