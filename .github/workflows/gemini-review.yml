@@ -135,11 +135,34 @@ jobs:
               return;
             }
 
-            const commentBody = `🤖 **Safe Review Output:**\n\n${geminiOutput}`;
+            var comment;
+            try {
+              const response = JSON.parse(geminiOutput).response;
+              if (response.vagueness.concerning) {
+                comment = `🤖 **Safe Review Output:**\n\n` +
+                          `1. **Vagueness:** concerning\n\n` +
+                          `   ${response.vagueness.reason}\n\n` +
+                          "Code consistency could not be evaluated because the commit message was too vague.";
+              } else {
+                comment = `🤖 **Safe Review Output:**\n\n` +
+                          `1. **Vagueness:** OK\n\n` +
+                          `   ${response.vagueness.reason}\n\n` +
+                          `2. **Contradicting:** ${response.contradicting.concerning ? "concerning" : "OK"}\n\n` +
+                          `   ${response.contradicting.reason}\n\n` +
+                          `3. **Incompleteness:** ${response.incomplete.concerning ? "concerning" : "OK"}\n\n` +
+                          `   ${response.incomplete.reason}\n\n`
+                if (response.contradicting.concerning || response.incomplete.concerning)
+                  comment += "The pull request should be reviewed carefully for the reasons mentioned above.";
+                else
+                  comment += "The pull request passes all code consistency checks.";
+              }
+            } catch (error) {
+              comment = `🤖 **Safe Review Output:**\n\n${geminiOutput}`;
+            }
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: commentBody
+              body: comment
             });
