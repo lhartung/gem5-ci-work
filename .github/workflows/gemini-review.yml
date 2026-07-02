@@ -152,7 +152,8 @@ jobs:
                 comment = `🤖 **Safe Review Output:**\n\n` +
                           `1. **Vagueness:** concerning\n\n` +
                           `   ${response.vagueness.reason}\n\n` +
-                          "Code consistency could not be evaluated because the commit message was too vague.";
+                          "Code consistency could not be evaluated because the commit message was too vague." +
+                          "The pull request should be reviewed extra carefully for this reason.";
               } else {
                 comment = `🤖 **Safe Review Output:**\n\n` +
                           `1. **Vagueness:** OK\n\n` +
@@ -162,7 +163,7 @@ jobs:
                           `3. **Incompleteness:** ${response.incomplete.concerning ? "concerning" : "OK"}\n\n` +
                           `   ${response.incomplete.reason}\n\n`;
                 if (response.contradicting.concerning || response.incomplete.concerning)
-                  comment += "The pull request should be reviewed carefully for the reasons mentioned above.";
+                  comment += "The pull request should be reviewed carefully for the reasons identified above.";
                 else
                   comment += "The pull request passes all code consistency checks.";
               }
