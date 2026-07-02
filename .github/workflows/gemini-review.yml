@@ -99,6 +99,9 @@ jobs:
                   }
                 }
               },
+              "output": {
+                "format": "json"
+              },
               "tools": {
                 "core": [
                   "run_shell_command(cat)",
