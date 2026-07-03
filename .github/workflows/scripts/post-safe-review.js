@@ -31,7 +31,7 @@ ${response}
 Note: an error occurred while parsing the report. The formatting may be incorrect, but the contents may still be helpful.`;
 
 
-function postSafeReview(github, context, core) {
+async function postSafeReview(github, context, core) {
   const geminiOutput = process.env.GEMINI_OUTPUT;
   const issueNumber = context.payload.pull_request
     ? context.payload.pull_request.number
