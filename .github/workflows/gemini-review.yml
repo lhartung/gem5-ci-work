@@ -166,6 +166,8 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
+        with:
+          ref: '${{ matrix.commit }}'
 
       - name: 'Run Gemini commit review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
@@ -229,7 +231,8 @@ jobs:
                   "run_shell_command(echo)",
                   "run_shell_command(grep)",
                   "run_shell_command(head)",
-                  "run_shell_command(tail)"
+                  "run_shell_command(tail)",
+                  "run_shell_command(git)"
                 ]
               }
             }
@@ -252,3 +255,10 @@ jobs:
             console.log(process.env.COMMIT_SHA);
             console.log(process.env.COMMIT_MESSAGE);
             console.log(process.env.GEMINI_OUTPUT);
+#            fs.writeFileSync(`commit-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
+#
+#      - name: Upload review file
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: 'commit-review-${{ matrix.commit }}'
+#          path: 'commit-review-${{ matrix.commit }}.txt'
