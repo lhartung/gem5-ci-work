@@ -26,7 +26,7 @@ jobs:
       issues: 'write'
       pull-requests: 'write'
     outputs:
-      commits: ${{ steps.get_pr_commits.outputs.data }}
+      commits: ${{ steps.get_pr_commits.outputs.commits }}
       token: ${{ steps.mint_identity_token.outputs.token }}
     steps:
       - name: 'Mint identity token'
@@ -56,9 +56,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.payload.pull_request ? context.payload.pull_request.number : context.payload.issue.number,
             });
-
-            console.log(commits);
-            return commits;
+            core.setOutput("commits", JSON.stringify(commits.data))
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
