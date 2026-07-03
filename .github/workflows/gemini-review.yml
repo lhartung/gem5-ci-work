@@ -56,7 +56,9 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.payload.pull_request ? context.payload.pull_request.number : context.payload.issue.number,
             });
-            core.setOutput("commits", JSON.stringify(commits.data))
+
+            const commit_shas = commits.data.map(x => x.sha);
+            core.setOutput("commits", JSON.stringify(commit_shas))
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
