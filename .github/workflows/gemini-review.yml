@@ -124,56 +124,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const geminiOutput = process.env.GEMINI_OUTPUT;
-            const issueNumber = context.payload.pull_request
-              ? context.payload.pull_request.number
-              : context.payload.issue.number;
-
-            if (!issueNumber) {
-              core.setFailed("Could not determine the Issue or PR number.");
-              return;
-            }
-
-            var comment;
-            try {
-              var response = geminiOutput;
-
-              // Gemini is probably trained on a lot of markdown, so it often includes code block signals.
-              if (response.startsWith("```json"))
-                response = response.slice(7);
-
-              response = response.trimEnd();
-              if (response.endsWith("```"))
-                response = response.slice(0, -3);
-
-              response = JSON.parse(response);
-              if (response.vagueness.concerning) {
-                comment = `🤖 **Safe Review Output:**\n\n` +
-                          `1. **Vagueness:** concerning\n\n` +
-                          `   ${response.vagueness.reason}\n\n` +
-                          "Code consistency could not be evaluated because the commit message was too vague." +
-                          "The pull request should be reviewed extra carefully for this reason.";
-              } else {
-                comment = `🤖 **Safe Review Output:**\n\n` +
-                          `1. **Vagueness:** OK\n\n` +
-                          `   ${response.vagueness.reason}\n\n` +
-                          `2. **Contradicting:** ${response.contradicting.concerning ? "concerning" : "OK"}\n\n` +
-                          `   ${response.contradicting.reason}\n\n` +
-                          `3. **Incompleteness:** ${response.incomplete.concerning ? "concerning" : "OK"}\n\n` +
-                          `   ${response.incomplete.reason}\n\n`;
-                if (response.contradicting.concerning || response.incomplete.concerning)
-                  comment += "The pull request should be reviewed carefully for the reasons identified above.";
-                else
-                  comment += "The pull request passes all code consistency checks.";
-              }
-            } catch (error) {
-              console.warn(error);
-              comment = `🤖 **Safe Review Output:**\n\n${geminiOutput}`;
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: comment
-            });
+            const postSafeReview = require('./.github/workflows/scripts/post-safe-review.js');
+            return await postSafeReview({ github, context, core });
