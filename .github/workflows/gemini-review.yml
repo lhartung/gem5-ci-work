@@ -27,6 +27,7 @@ jobs:
       pull-requests: 'write'
     outputs:
       commits: ${{ steps.get_pr_commits.outputs.commits }}
+      commit_hashes: ${{ steps.get_pr_commits.outputs.commit_hashes }}
       token: ${{ steps.mint_identity_token.outputs.token }}
     steps:
       - name: 'Mint identity token'
@@ -57,6 +58,7 @@ jobs:
               pull_number: context.payload.pull_request ? context.payload.pull_request.number : context.payload.issue.number,
             });
             core.setOutput("commits", JSON.stringify(commits.data))
+            core.setOutput("commit_hashes", JSON.stringify(commits.data.map(x => x.sha)))
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
@@ -155,7 +157,7 @@ jobs:
       pull-requests: 'write'
     strategy:
       matrix:
-        commit: ${{ fromJson(needs.review.outputs.commits).map(x => x.sha) }}
+        commit: ${{ fromJson(needs.review.outputs.commit_hashes) }}
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
