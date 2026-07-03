@@ -125,4 +125,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const postSafeReview = require('./.github/workflows/scripts/post-safe-review.js');
-            return await postSafeReview({ github, context, core });
+            return await postSafeReview(github, context, core);
