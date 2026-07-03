@@ -25,6 +25,9 @@ jobs:
       id-token: 'write'
       issues: 'write'
       pull-requests: 'write'
+    outputs:
+      commits: ${{ steps.get_pr_commits.outputs.data }}
+      token: ${{ steps.mint_identity_token.outputs.token }}
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -40,6 +43,21 @@ jobs:
 
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
+
+      - name: 'Get PR Commits'
+        id: 'get_pr_commits'
+        uses: 'actions/github-script@v7'
+        with:
+          result-encoding: string
+          script: |
+            const commits = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            console.log(commits);
+            return commits;
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
@@ -126,3 +144,29 @@ jobs:
           script: |
             const postSafeReview = require('./.github/workflows/scripts/post-safe-review.js');
             return await postSafeReview(github, context, core);
+
+  per-commit-review:
+    needs: review
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 30
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      issues: 'write'
+      pull-requests: 'write'
+    strategy:
+      matrix:
+        commit: ${{ fromJson(needs.review.outputs.commits) }}
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
+
+      - name: Debugging
+        uses: actions/github-script@v7
+        env:
+          COMMIT: '${{ matrix.commit }}'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log(process.env.COMMIT);
+
