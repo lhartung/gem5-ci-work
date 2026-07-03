@@ -56,9 +56,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.payload.pull_request ? context.payload.pull_request.number : context.payload.issue.number,
             });
-
-            const commit_shas = commits.data.map(x => x.sha);
-            core.setOutput("commits", JSON.stringify(commit_shas))
+            core.setOutput("commits", JSON.stringify(commits.data))
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
@@ -134,7 +132,7 @@ jobs:
             [
               "https://github.com/lhartung/safe-review"
             ]
-          prompt: '/safe-code-review'
+          prompt: '/safe-review-pr'
 
       - name: Post Comment
         uses: actions/github-script@v7
@@ -157,16 +155,92 @@ jobs:
       pull-requests: 'write'
     strategy:
       matrix:
-        commit: ${{ fromJson(needs.review.outputs.commits) }}
+        commit: ${{ fromJson(needs.review.outputs.commits).map(x => x.sha) }}
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
 
-      - name: Debugging
-        uses: actions/github-script@v7
+      - name: 'Run Gemini commit review'
+        uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
+        id: 'gemini_commit_review'
         env:
-          COMMIT: '${{ matrix.commit }}'
+          GITHUB_TOKEN: '${{ needs.review.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
+          COMMIT_SHA: '${{ matrix.commit }}'
+          PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
+          REPOSITORY: '${{ github.repository }}'
+          ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
+          GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
+        with:
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_cli_version: ${{ vars.GEMINI_CLI_VERSION || '0.38.1' }}
+          gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          gemini_model: '${{ vars.GEMINI_MODEL }}'
+          google_api_key: '${{ secrets.GOOGLE_API_KEY }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
+          workflow_name: 'gemini-review'
+          # Explicitly set the PR number to handle `issue_comment` triggers (which GitHub treats as issues, not PRs)
+          github_pr_number: '${{ github.event.pull_request.number }}'
+          settings: |-
+            {
+              "model": {
+                "maxSessionTurns": 50
+              },
+              "telemetry": {
+                "enabled": true,
+                "target": "local",
+                "outfile": ".gemini/telemetry.log"
+              },
+              "mcpServers": {
+                "github": {
+                  "command": "docker",
+                  "args": [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                    "ghcr.io/github/github-mcp-server:v0.27.0"
+                  ],
+                  "includeTools": [
+                    "get_commit"
+                  ],
+                  "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+                  }
+                }
+              },
+              "output": {
+                "format": "json"
+              },
+              "tools": {
+                "core": [
+                  "run_shell_command(cat)",
+                  "run_shell_command(echo)",
+                  "run_shell_command(grep)",
+                  "run_shell_command(head)",
+                  "run_shell_command(tail)"
+                ]
+              }
+            }
+          extensions: |
+            [
+              "https://github.com/lhartung/safe-review"
+            ]
+          prompt: '/safe-review-commit'
+
+      - name: Post Comment
+        uses: actions/github-script@v7
+        id: collect_outputs
+        env:
+          COMMIT_SHA: '${{ matrix.commit }}'
+          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            console.log(process.env.COMMIT);
+            console.log(process.env.GEMINI_OUTPUT);
