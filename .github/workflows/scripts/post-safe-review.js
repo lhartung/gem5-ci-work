@@ -44,7 +44,7 @@ const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit
 Code consistency could not be evaluated because the commit message was too vague. The commit should be reviewed extra carefully for this reason.`;
 
 
-const nonvagueReport = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
+const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
 
 **Commit:** [${commit_hash}](${commit.url})
 
@@ -65,7 +65,7 @@ const nonvagueReport = (response, commit_hash, commit) => `🤖 **Safe Commit Ou
 ${response.contradicting.concerning || response.incomplete.concerning ? "The commit should be reviewed carefully for the reasons identified above." : "The commit passes all code consistency checks."}`;
 
 
-const parseErrorReport = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
+const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
 
 **Commit:** [${commit_hash}](${commit.url})
 
@@ -140,12 +140,12 @@ export async function postCommitReview(github, context, core) {
   try {
     const response = parseGeminiOutput(geminiOutput);
     if (response.vagueness.concerning) {
-      comment = vagueReport(response, commitHash, commitInfo);
+      comment = vagueCommitReport(response, commitHash, commitInfo);
     } else {
-      comment = nonvagueReport(response, commitHash, commitInfo);
+      comment = nonvagueCommitReport(response, commitHash, commitInfo);
     }
   } catch (error) {
     console.warn(error);
-    comment = parseErrorReport(geminiOutput, commitHash, commitInfo);
+    comment = parseErrorReportCommit(geminiOutput, commitHash, commitInfo);
   }
 }
