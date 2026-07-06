@@ -37,8 +37,7 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 // Template - commit review, flagged for vagueness
 const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.html_url})
-Testing: ${commit.url}
+**Commit:** [${commit_hash}](${commit.fixed_url})
 
 <blockquote>
 ${commit.message}
@@ -54,7 +53,7 @@ Code consistency could not be evaluated because the commit message was too vague
 // Template - commit review, not flagged for vagueness
 const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.html_url})
+**Commit:** [${commit_hash}](${commit.fixed_url})
 Testing: ${commit.url}
 
 <blockquote>
@@ -79,7 +78,7 @@ ${response.contradicting.concerning || response.incomplete.concerning ? "The com
 // Template - commit review, error parsing model output
 const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.html_url})
+**Commit:** [${commit_hash}](${commit.fixed_url})
 Testing: ${commit.url}
 
 <blockquote>
@@ -150,6 +149,10 @@ export async function postCommitReview(github, context, core) {
     core.setFailed("Could not determine the Issue or PR number.");
     return;
   }
+
+  // I had some trouble with the html_url field in the commit info,
+  // so it may be more reliable to construct it from known information.
+  const commitInfo.fixed_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${commitHash}`
 
   var comment;
   try {
