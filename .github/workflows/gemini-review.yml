@@ -256,6 +256,10 @@ jobs:
             console.log(process.env.GEMINI_OUTPUT);
 #            fs.writeFileSync(`commit-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
 
+      # Checkout merge base for access to the post-safe-review.js script.
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
+
       - name: Post Comment
         uses: actions/github-script@v7
         env:
