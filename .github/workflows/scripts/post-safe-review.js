@@ -148,4 +148,11 @@ export async function postCommitReview(github, context, core) {
     console.warn(error);
     comment = parseErrorReportCommit(geminiOutput, commitHash, commitInfo);
   }
+
+  await github.rest.issues.createComment({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    issue_number: issueNumber,
+    body: comment
+  });
 }
