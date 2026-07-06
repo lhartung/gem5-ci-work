@@ -142,17 +142,17 @@ export async function postCommitReview(github, context, core) {
     ? context.payload.pull_request.number
     : context.payload.issue.number;
 
-  const commits = JSON.parse(process.env.COMMITS);
-  const commitInfo = commits[commitHash].commit;
-
   if (!issueNumber) {
     core.setFailed("Could not determine the Issue or PR number.");
     return;
   }
 
+  const commits = JSON.parse(process.env.COMMITS);
+  const commitInfo = commits[commitHash].commit;
+
   // I had some trouble with the html_url field in the commit info,
   // so it may be more reliable to construct it from known information.
-  const commitInfo.fixed_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${commitHash}`
+  commitInfo.fixed_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${commitHash}`
 
   var comment;
   try {
