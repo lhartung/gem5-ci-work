@@ -148,8 +148,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const postSafeReview = require('./.github/workflows/scripts/post-safe-review.js');
-            return await postSafeReview(github, context, core);
+            const { postPullRequestReview } = require('./.github/workflows/scripts/post-safe-review.js');
+            return await postPullRequestReview(github, context, core);
 
   per-commit-review:
     needs: review
@@ -255,6 +255,18 @@ jobs:
             console.log(process.env.COMMIT_MESSAGE);
             console.log(process.env.GEMINI_OUTPUT);
 #            fs.writeFileSync(`commit-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
+
+      - name: Post Comment
+        uses: actions/github-script@v7
+        env:
+          COMMITS: '${{ needs.review.outputs.commits }}'
+          COMMIT_HASH: '${{ matrix.commit }}'
+          GEMINI_OUTPUT: '${{ steps.gemini_pr_review.outputs.summary }}'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { postCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
+            return await postCommitReview(github, context, core);
 #
 #      - name: Upload review file
 #        uses: actions/upload-artifact@v4
