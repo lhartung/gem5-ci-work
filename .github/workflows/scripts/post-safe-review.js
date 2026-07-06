@@ -128,7 +128,7 @@ export async function postCommitReview(github, context, core) {
     ? context.payload.pull_request.number
     : context.payload.issue.number;
 
-  const commits = JSON.parse(process.env.COMMITs);
+  const commits = JSON.parse(process.env.COMMITS);
   const commitInfo = commits[commitHash].commit;
 
   if (!issueNumber) {
