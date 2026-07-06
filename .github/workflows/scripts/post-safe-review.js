@@ -1,3 +1,4 @@
+// Template - pull request review, flagged for vagueness
 const vagueReport = (response) => `🤖 **Safe PR Review:**
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
@@ -7,6 +8,7 @@ const vagueReport = (response) => `🤖 **Safe PR Review:**
 Code consistency could not be evaluated because the commit message was too vague. The pull request should be reviewed extra carefully for this reason.`;
 
 
+// Template - pull request review, not flagged for vagueness
 const nonvagueReport = (response) => `🤖 **Safe PR Review:**
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
@@ -24,6 +26,7 @@ const nonvagueReport = (response) => `🤖 **Safe PR Review:**
 ${response.contradicting.concerning || response.incomplete.concerning ? "The pull request should be reviewed carefully for the reasons identified above." : "The pull request passes all code consistency checks."}`;
 
 
+// Template - pull request review, error parsing model output
 const parseErrorReport = (response) => `🤖 **Safe PR Review:**
 
 ${response}
@@ -31,11 +34,14 @@ ${response}
 Note: an error occurred while parsing the report. The formatting may be incorrect, but the contents may still be helpful.`;
 
 
+// Template - commit review, flagged for vagueness
 const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.url})
+**Commit:** [${commit_hash}](${commit.html_url})
 
-> ${commit.message}
+<blockquote>
+${commit.message}
+</blockquote>
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -44,11 +50,14 @@ const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit
 Code consistency could not be evaluated because the commit message was too vague. The commit should be reviewed extra carefully for this reason.`;
 
 
-const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
+// Template - commit review, not flagged for vagueness
+const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.url})
+**Commit:** [${commit_hash}](${commit.html_url})
 
-> ${commit.message}
+<blockquote>
+${commit.message}
+</blockquote>
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -65,11 +74,14 @@ const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Com
 ${response.contradicting.concerning || response.incomplete.concerning ? "The commit should be reviewed carefully for the reasons identified above." : "The commit passes all code consistency checks."}`;
 
 
-const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Output:**
+// Template - commit review, error parsing model output
+const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
-**Commit:** [${commit_hash}](${commit.url})
+**Commit:** [${commit_hash}](${commit.html_url})
 
-> ${commit.message}
+<blockquote>
+${commit.message}
+</blockquote>
 
 ${response}
 

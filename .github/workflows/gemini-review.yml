@@ -265,7 +265,7 @@ jobs:
         env:
           COMMITS: '${{ needs.review.outputs.commits }}'
           COMMIT_HASH: '${{ matrix.commit }}'
-          GEMINI_OUTPUT: '${{ steps.gemini_pr_review.outputs.summary }}'
+          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
