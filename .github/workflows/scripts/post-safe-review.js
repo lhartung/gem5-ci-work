@@ -38,6 +38,7 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
 **Commit:** [${commit_hash}](${commit.html_url})
+Testing: ${commit.url}
 
 <blockquote>
 ${commit.message}
@@ -54,6 +55,7 @@ Code consistency could not be evaluated because the commit message was too vague
 const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
 **Commit:** [${commit_hash}](${commit.html_url})
+Testing: ${commit.url}
 
 <blockquote>
 ${commit.message}
@@ -78,6 +80,7 @@ ${response.contradicting.concerning || response.incomplete.concerning ? "The com
 const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
 
 **Commit:** [${commit_hash}](${commit.html_url})
+Testing: ${commit.url}
 
 <blockquote>
 ${commit.message}
