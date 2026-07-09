@@ -245,32 +245,50 @@ jobs:
         uses: actions/github-script@v7
         id: collect_outputs
         env:
-          COMMIT_MESSAGE: '${{ fromJson(needs.review.outputs.commits)[matrix.commit].commit.message }}'
           COMMIT_SHA: '${{ matrix.commit }}'
           GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            console.log(process.env.COMMIT_SHA);
-            console.log(process.env.COMMIT_MESSAGE);
-            console.log(process.env.GEMINI_OUTPUT);
-#            fs.writeFileSync(`commit-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
+            fs.writeFileSync(`safe-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
 
-      # Checkout merge base for access to the post-safe-review.js script.
+      - name: Create review artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: safe-review-${{ matrix.runs-on }}
+          path: safe-review-${{ matrix.runs-on }}.txt
+
+  finish-per-commit-review:
+    needs: per-commit-review
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 30
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      issues: 'write'
+      pull-requests: 'write'
+    steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
 
-      - name: Post Comment
-        uses: actions/github-script@v7
-        env:
-          COMMITS: '${{ needs.review.outputs.commits }}'
-          COMMIT_HASH: '${{ matrix.commit }}'
-          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
+      - uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { postCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
-            return await postCommitReview(github, context, core);
+          pattern: safe-review-*
+          merge-multiple: true
+
+      - run: cat safe-review-*
+
+#      - name: Post Comment
+#        uses: actions/github-script@v7
+#        env:
+#          COMMITS: '${{ needs.review.outputs.commits }}'
+#          COMMIT_HASH: '${{ matrix.commit }}'
+#          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          script: |
+#            const { postCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
+#            return await postCommitReview(github, context, core);
 #
 #      - name: Upload review file
 #        uses: actions/upload-artifact@v4
