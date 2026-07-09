@@ -197,6 +197,8 @@ export async function postAggregateCommitReview(github, context, core) {
     var contradicting = "N/A";
     var incomplete = "N/A";
 
+    const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
+
     try {
       const response = parseGeminiOutput(output);
       vagueness = response.vagueness.converning ? "concerning" : "OK";
@@ -217,7 +219,6 @@ export async function postAggregateCommitReview(github, context, core) {
       details += parseErrorReportCommit(response, hash, url, commit.commit.message);
     }
 
-    const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
     table += `| [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
   }
 
