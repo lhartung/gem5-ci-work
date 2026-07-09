@@ -250,7 +250,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            fs.writeFileSync(`safe-review-${process.env.COMMIT_SHA}.txt`, process.env.GEMINI_OUTPUT);
+            const fs = require('fs');
+            const content = process.env.GEMINI_OUTPUT;
+            fs.writeFileSync(`safe-review-${process.env.COMMIT_SHA}.txt`, content);
 
       - name: Create review artifacts
         uses: actions/upload-artifact@v4
