@@ -261,7 +261,7 @@ jobs:
           path: safe-review-${{ matrix.commit }}.txt
 
   finish-per-commit-review:
-    needs: per-commit-review
+    needs: [review, per-commit-review]
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:
@@ -278,22 +278,14 @@ jobs:
           pattern: safe-review-*
           merge-multiple: true
 
-      - run: cat safe-review-*
-
-#      - name: Post Comment
-#        uses: actions/github-script@v7
-#        env:
-#          COMMITS: '${{ needs.review.outputs.commits }}'
-#          COMMIT_HASH: '${{ matrix.commit }}'
-#          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
-#        with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
-#          script: |
-#            const { postCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
-#            return await postCommitReview(github, context, core);
-#
-#      - name: Upload review file
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: 'commit-review-${{ matrix.commit }}'
-#          path: 'commit-review-${{ matrix.commit }}.txt'
+      - name: Post Comment
+        uses: actions/github-script@v7
+        env:
+          COMMITS: '${{ needs.review.outputs.commits }}'
+          COMMIT_HASH: '${{ matrix.commit }}'
+          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { postAggregateCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
+            return await postAggregateCommitReview(github, context, core);

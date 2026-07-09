@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 // Template - pull request review, flagged for vagueness
 const vagueReport = (response) => `🤖 **Safe PR Review:**
 
@@ -164,6 +166,54 @@ export async function postCommitReview(github, context, core) {
     console.warn(error);
     comment = parseErrorReportCommit(geminiOutput, commitHash, commitInfo);
   }
+
+  await github.rest.issues.createComment({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    issue_number: issueNumber,
+    body: comment
+  });
+}
+
+export async function postAggregatedCommitReview(github, context, core) {
+  const issueNumber = context.payload.pull_request
+    ? context.payload.pull_request.number
+    : context.payload.issue.number;
+
+  if (!issueNumber) {
+    core.setFailed("Could not determine the Issue or PR number.");
+    return;
+  }
+
+  var table = "| Commit | Vagueness | Contradicting | Incomplete |\n";
+  table += "| --- | --- | --- | --- |\n";
+
+  for (const [hash, commit] of Object.entries(commits)) {
+    const output = fs.readFileSync(`safe-review-${hash}.txt`, 'utf8');
+
+    var vagueness = "N/A";
+    var contradicting = "N/A";
+    var incomplete = "N/A";
+
+    try {
+      const response = parseGeminiOutput(output);
+      vagueness = response.vagueness.converning ? "concerning" : "OK";
+      if (response.vagueness.converning) {
+        vagueness = "concerning";
+      } else {
+        vagueness = "OK";
+        contradicting = response.contradicting.concerning ? "concerning" : "OK";
+        concerning = response.incomplete.concerning ? "concerning" : "OK";
+      }
+    } catch (error) {
+      console.warn(error);
+    }
+
+    const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
+    table += `| [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
+  }
+
+  const comment = `🤖 **Safe Commit Review:**\n\n${table}`;
 
   await github.rest.issues.createComment({
     owner: context.repo.owner,
