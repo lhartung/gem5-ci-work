@@ -38,12 +38,11 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 
 
 // Template - commit review, flagged for vagueness
-const vagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
-
-**Commit:** [${commit_hash}](${commit.fixed_url})
+const vagueCommitReport = (response, hash, url, message) => `
+**Commit:** [${hash}](${url})
 
 <blockquote>
-${commit.message}
+${message}
 </blockquote>
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
@@ -54,12 +53,11 @@ Code consistency could not be evaluated because the commit message was too vague
 
 
 // Template - commit review, not flagged for vagueness
-const nonvagueCommitReport = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
-
-**Commit:** [${commit_hash}](${commit.fixed_url})
+const nonvagueCommitReport = (response, hash, url, message) => `
+**Commit:** [${hash}](${url})
 
 <blockquote>
-${commit.message}
+${message}
 </blockquote>
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
@@ -78,12 +76,11 @@ ${response.contradicting.concerning || response.incomplete.concerning ? "The com
 
 
 // Template - commit review, error parsing model output
-const parseErrorReportCommit = (response, commit_hash, commit) => `🤖 **Safe Commit Review:**
-
-**Commit:** [${commit_hash}](${commit.fixed_url})
+const parseErrorReportCommit = (response, hash, url, message) => `
+**Commit:** [${hash}](${url})
 
 <blockquote>
-${commit.message}
+${message}
 </blockquote>
 
 ${response}
@@ -153,19 +150,19 @@ export async function postCommitReview(github, context, core) {
 
   // I had some trouble with the html_url field in the commit info,
   // so it may be more reliable to construct it from known information.
-  commitInfo.fixed_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${commitHash}`
+  const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${commitHash}`
 
   var comment;
   try {
     const response = parseGeminiOutput(geminiOutput);
     if (response.vagueness.concerning) {
-      comment = vagueCommitReport(response, commitHash, commitInfo);
+      comment = vagueCommitReport(response, commitHash, url, commitInfo.message);
     } else {
-      comment = nonvagueCommitReport(response, commitHash, commitInfo);
+      comment = nonvagueCommitReport(response, commitHash, url, commitInfo.message);
     }
   } catch (error) {
     console.warn(error);
-    comment = parseErrorReportCommit(geminiOutput, commitHash, commitInfo);
+    comment = parseErrorReportCommit(geminiOutput, commitHash, url, commitInfo.message);
   }
 
   await github.rest.issues.createComment({
@@ -176,7 +173,7 @@ export async function postCommitReview(github, context, core) {
   });
 }
 
-export async function postAggregatedCommitReview(github, context, core) {
+export async function postAggregateCommitReview(github, context, core) {
   const issueNumber = context.payload.pull_request
     ? context.payload.pull_request.number
     : context.payload.issue.number;
@@ -188,6 +185,8 @@ export async function postAggregatedCommitReview(github, context, core) {
 
   var table = "| Commit | Vagueness | Contradicting | Incomplete |\n";
   table += "| --- | --- | --- | --- |\n";
+
+  var details = "";
 
   for (const [hash, commit] of Object.entries(commits)) {
     const output = fs.readFileSync(`safe-review-${hash}.txt`, 'utf8');
@@ -201,20 +200,26 @@ export async function postAggregatedCommitReview(github, context, core) {
       vagueness = response.vagueness.converning ? "concerning" : "OK";
       if (response.vagueness.converning) {
         vagueness = "concerning";
+
+        details += vagueCommitReport(response, hash, url, commit.commit.message);
       } else {
         vagueness = "OK";
         contradicting = response.contradicting.concerning ? "concerning" : "OK";
         concerning = response.incomplete.concerning ? "concerning" : "OK";
+
+        details += nonvagueCommitReport(response, hash, url, commit.commit.message);
       }
     } catch (error) {
       console.warn(error);
+
+      details += parseErrorReportCommit(response, hash, url, commit.commit.message);
     }
 
     const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
     table += `| [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
   }
 
-  const comment = `🤖 **Safe Commit Review:**\n\n${table}`;
+  const comment = `🤖 **Safe Commit Review:**\n\n${table}\n\n${details}`;
 
   await github.rest.issues.createComment({
     owner: context.repo.owner,
