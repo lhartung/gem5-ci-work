@@ -207,7 +207,7 @@ export async function postAggregateCommitReview(github, context, core) {
       } else {
         vagueness = "OK";
         contradicting = response.contradicting.concerning ? "concerning" : "OK";
-        concerning = response.incomplete.concerning ? "concerning" : "OK";
+        incomplete = response.incomplete.concerning ? "concerning" : "OK";
 
         details += nonvagueCommitReport(response, hash, url, commit.commit.message);
       }
