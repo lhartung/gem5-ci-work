@@ -1,4 +1,5 @@
-const fs = require('fs');
+import fs from 'fs';
+
 
 // Template - pull request review, flagged for vagueness
 const vagueReport = (response) => `🤖 **Safe PR Review:**
