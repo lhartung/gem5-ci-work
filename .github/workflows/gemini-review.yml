@@ -257,8 +257,8 @@ jobs:
       - name: Create review artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: safe-review-${{ matrix.runs-on }}
-          path: safe-review-${{ matrix.runs-on }}.txt
+          name: safe-review-${{ matrix.commit }}
+          path: safe-review-${{ matrix.commit }}.txt
 
   finish-per-commit-review:
     needs: per-commit-review
