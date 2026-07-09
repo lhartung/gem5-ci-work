@@ -183,6 +183,8 @@ export async function postAggregateCommitReview(github, context, core) {
     return;
   }
 
+  const commits = JSON.parse(process.env.COMMITS);
+
   var table = "| Commit | Vagueness | Contradicting | Incomplete |\n";
   table += "| --- | --- | --- | --- |\n";
 
