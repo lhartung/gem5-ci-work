@@ -2,7 +2,7 @@ import fs from 'fs';
 
 
 // Template - pull request review, flagged for vagueness
-const vagueReport = (response) => `🤖 **Safe PR Review:**
+const vagueReport = (response) => `# Safe Pull Request Review
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -12,7 +12,7 @@ Code consistency could not be evaluated because the commit message was too vague
 
 
 // Template - pull request review, not flagged for vagueness
-const nonvagueReport = (response) => `🤖 **Safe PR Review:**
+const nonvagueReport = (response) => `# Safe Pull Request Review
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -26,11 +26,11 @@ const nonvagueReport = (response) => `🤖 **Safe PR Review:**
 
    ${response.incomplete.reason}
 
-${response.contradicting.concerning || response.incomplete.concerning ? "The pull request should be reviewed carefully for the reasons identified above." : "The pull request passes all code consistency checks."}`;
+${response.contradicting.concerning || response.incomplete.concerning ? "The pull request should be reviewed carefully for the reasons identified above." : "The pull request passes all code consistency checks. The changes should still be reviewed for desirability."}`;
 
 
 // Template - pull request review, error parsing model output
-const parseErrorReport = (response) => `🤖 **Safe PR Review:**
+const parseErrorReport = (response) => `# Safe Pull Request Review
 
 ${response}
 
@@ -39,26 +39,22 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 
 // Template - commit review, flagged for vagueness
 const vagueCommitReport = (response, hash, url, message) => `
-**Commit:** [${hash}](${url})
+## ${message[0]}
+([${hash}](${url}))
 
-<blockquote>
-${message}
-</blockquote>
+${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
-   ${response.vagueness.reason}
-
-Code consistency could not be evaluated because the commit message was too vague. The commit should be reviewed extra carefully for this reason.`;
+   ${response.vagueness.reason}`;
 
 
 // Template - commit review, not flagged for vagueness
 const nonvagueCommitReport = (response, hash, url, message) => `
-**Commit:** [${hash}](${url})
+## ${message[0]}
+([${hash}](${url}))
 
-<blockquote>
-${message}
-</blockquote>
+${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -70,18 +66,15 @@ ${message}
 
 3. **Incomplete:** ${response.incomplete.concerning ? "concerning" : "OK"}
 
-   ${response.incomplete.reason}
-
-${response.contradicting.concerning || response.incomplete.concerning ? "The commit should be reviewed carefully for the reasons identified above." : "The commit passes all code consistency checks."}`;
+   ${response.incomplete.reason}`;
 
 
 // Template - commit review, error parsing model output
 const parseErrorReportCommit = (response, hash, url, message) => `
-**Commit:** [${hash}](${url})
+## ${message[0]}
+([${hash}](${url}))
 
-<blockquote>
-${message}
-</blockquote>
+${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 ${response}
 
@@ -98,6 +91,18 @@ function parseGeminiOutput(response) {
     response = response.slice(0, -3);
 
   return JSON.parse(response);
+}
+
+
+function splitCommitMessage(message) {
+  const index = message.indexOf("\n");
+  if (index < 0) {
+    return [message, ""];
+  } else {
+    const subject = message.substring(0, index).trim();
+    const body = message.substring(index+1).trim();
+    return [subject, body];
+  }
 }
 
 
@@ -199,30 +204,32 @@ export async function postAggregateCommitReview(github, context, core) {
 
     const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
 
+    const message = splitCommitMessage(commit.commit.message);
+
     try {
       const response = parseGeminiOutput(output);
       vagueness = response.vagueness.converning ? "concerning" : "OK";
       if (response.vagueness.converning) {
         vagueness = "concerning";
 
-        details += vagueCommitReport(response, hash, url, commit.commit.message);
+        details += vagueCommitReport(response, hash, url, message);
       } else {
         vagueness = "OK";
         contradicting = response.contradicting.concerning ? "concerning" : "OK";
         incomplete = response.incomplete.concerning ? "concerning" : "OK";
 
-        details += nonvagueCommitReport(response, hash, url, commit.commit.message);
+        details += nonvagueCommitReport(response, hash, url, message);
       }
     } catch (error) {
       console.warn(error);
 
-      details += parseErrorReportCommit(response, hash, url, commit.commit.message);
+      details += parseErrorReportCommit(response, hash, url, message);
     }
 
     table += `| [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
   }
 
-  const comment = `🤖 **Safe Commit Review:**\n\n${table}\n\n${details}`;
+  const comment = `# Safe Commit Review\n\n${table}\n\n${details}`;
 
   await github.rest.issues.createComment({
     owner: context.repo.owner,
