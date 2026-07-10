@@ -39,9 +39,8 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 
 // Template - commit review, flagged for vagueness
 const vagueCommitReport = (response, hash, url, message, index) => `
-## ${index}. ${message[0]}
-${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
-([${hash}](${url}))
+## ${index}. [${message[0]}](${url})
+${message[1] === "" ? "*Commit message has no further details*\n\n" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -50,9 +49,8 @@ ${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>"
 
 // Template - commit review, not flagged for vagueness
 const nonvagueCommitReport = (response, hash, url, message, index) => `
-## ${index}. ${message[0]}
-${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
-([${hash}](${url}))
+## ${index}. [${message[0]}](${url})
+${message[1] === "" ? "*Commit message has no further details*\n\n" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -69,9 +67,8 @@ ${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>"
 
 // Template - commit review, error parsing model output
 const parseErrorReportCommit = (response, hash, url, message, index) => `
-## ${index}. ${message[0]}
-${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
-([${hash}](${url}))
+## ${index}. [${message[0]}](${url})
+${message[1] === "" ? "*Commit message has no further details*\n\n" : "<blockquote>" + message[1] + "</blockquote>"}
 
 ${response}
 
@@ -206,8 +203,8 @@ export async function postAggregateCommitReview(github, context, core) {
 
     try {
       const response = parseGeminiOutput(output);
-      vagueness = response.vagueness.converning ? "concerning" : "OK";
-      if (response.vagueness.converning) {
+      vagueness = response.vagueness.concerning ? "concerning" : "OK";
+      if (response.vagueness.concerning) {
         vagueness = "concerning";
 
         details += vagueCommitReport(response, hash, url, message, index);
@@ -224,7 +221,7 @@ export async function postAggregateCommitReview(github, context, core) {
       details += parseErrorReportCommit(response, hash, url, message, index);
     }
 
-    table += `| ${index} | [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
+    table += `| ${index} | ${message[0]} [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
     index++;
   }
 
