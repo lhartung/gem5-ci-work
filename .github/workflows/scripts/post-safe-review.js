@@ -193,9 +193,9 @@ export async function postAggregateCommitReview(github, context, core) {
   for (const [hash, commit] of Object.entries(commits)) {
     const output = fs.readFileSync(`safe-review-${hash}.txt`, 'utf8');
 
-    var vagueness = "N/A";
-    var contradicting = "N/A";
-    var incomplete = "N/A";
+    var vagueness = "-";
+    var contradicting = "-";
+    var incomplete = "-";
 
     const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${issueNumber}/changes/${hash}`
 
