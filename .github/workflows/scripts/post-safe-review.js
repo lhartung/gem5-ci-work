@@ -38,11 +38,10 @@ Note: an error occurred while parsing the report. The formatting may be incorrec
 
 
 // Template - commit review, flagged for vagueness
-const vagueCommitReport = (response, hash, url, message) => `
-## ${message[0]}
+const vagueCommitReport = (response, hash, url, message, index) => `
+## ${index}. ${message[0]}
+${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
 ([${hash}](${url}))
-
-${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -50,11 +49,10 @@ ${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1]
 
 
 // Template - commit review, not flagged for vagueness
-const nonvagueCommitReport = (response, hash, url, message) => `
-## ${message[0]}
+const nonvagueCommitReport = (response, hash, url, message, index) => `
+## ${index}. ${message[0]}
+${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
 ([${hash}](${url}))
-
-${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 1. **Vagueness:** ${response.vagueness.concerning ? "concerning" : "OK"}
 
@@ -70,11 +68,10 @@ ${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1]
 
 
 // Template - commit review, error parsing model output
-const parseErrorReportCommit = (response, hash, url, message) => `
-## ${message[0]}
+const parseErrorReportCommit = (response, hash, url, message, index) => `
+## ${index}. ${message[0]}
+${message[1] === "" ? "*Commit message has no further details*" : "<blockquote>" + message[1] + "</blockquote>"}
 ([${hash}](${url}))
-
-${message[1] === "" ? "Commit message has no body" : "<blockquote>" + message[1] + "</blockquote>"}
 
 ${response}
 
@@ -190,11 +187,12 @@ export async function postAggregateCommitReview(github, context, core) {
 
   const commits = JSON.parse(process.env.COMMITS);
 
-  var table = "| Commit | Vagueness | Contradicting | Incomplete |\n";
-  table += "| --- | --- | --- | --- |\n";
+  var table = "| # | Commit | Vagueness | Contradicting | Incomplete |\n";
+  table += "| --- | --- | --- | --- | --- |\n";
 
   var details = "";
 
+  var index = 1;
   for (const [hash, commit] of Object.entries(commits)) {
     const output = fs.readFileSync(`safe-review-${hash}.txt`, 'utf8');
 
@@ -212,21 +210,22 @@ export async function postAggregateCommitReview(github, context, core) {
       if (response.vagueness.converning) {
         vagueness = "concerning";
 
-        details += vagueCommitReport(response, hash, url, message);
+        details += vagueCommitReport(response, hash, url, message, index);
       } else {
         vagueness = "OK";
         contradicting = response.contradicting.concerning ? "concerning" : "OK";
         incomplete = response.incomplete.concerning ? "concerning" : "OK";
 
-        details += nonvagueCommitReport(response, hash, url, message);
+        details += nonvagueCommitReport(response, hash, url, message, index);
       }
     } catch (error) {
       console.warn(error);
 
-      details += parseErrorReportCommit(response, hash, url, message);
+      details += parseErrorReportCommit(response, hash, url, message, index);
     }
 
-    table += `| [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
+    table += `| ${index} | [${hash}](${url}) | ${vagueness} | ${contradicting} | ${incomplete} |\n`;
+    index++;
   }
 
   const comment = `# Safe Commit Review\n\n${table}\n\n${details}`;
