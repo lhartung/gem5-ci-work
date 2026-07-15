@@ -99,7 +99,7 @@ jobs:
 
             if (eventType === 'pull_request.opened') {
               core.setOutput('command', 'review');
-            } else if (review_match)
+            } else if (review_match) {
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
               core.setOutput('review_type', review_match.groups.type || 'default');
