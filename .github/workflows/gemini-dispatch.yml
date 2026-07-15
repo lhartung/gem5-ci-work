@@ -10,13 +10,6 @@ on:
   pull_request:
     types:
       - 'opened'
-  issues:
-    types:
-      - 'opened'
-      - 'reopened'
-  issue_comment:
-    types:
-      - 'created'
 
 defaults:
   run:
@@ -101,11 +94,6 @@ jobs:
               const additionalContext = request.replace(/^@gemini-cli \/review/, '').trim();
               core.setOutput('additional_context', additionalContext);
               core.setOutput('requested_full_review', false);
-            } else if (request.startsWith("@gemini-cli /full-review")) {
-              core.setOutput('command', 'review');
-              const additionalContext = request.replace(/^@gemini-cli \/full-review/, '').trim();
-              core.setOutput('additional_context', additionalContext);
-              core.setOutput('requested_full_review', true);
             } else {
               core.setOutput('command', 'fallthrough');
             }
@@ -166,7 +154,7 @@ jobs:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           MESSAGE: |-
-            🤖 I'm sorry @${{ github.actor }}, but I was unable to process your request (${{ steps.extract_command.outputs.command }}). Please [see the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
+            🤖 I'm sorry @${{ github.actor }}, but I was unable to process your request. Please [see the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
           REPOSITORY: '${{ github.repository }}'
         run: |-
           gh issue comment "${ISSUE_NUMBER}" \
