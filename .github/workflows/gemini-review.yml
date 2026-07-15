@@ -159,7 +159,7 @@ jobs:
 
   per-commit-review:
     needs: review
-    if: ${{ inputs.review_type == "full" || needs.review.outputs.should-review-commits == 'true' }}
+    if: ${{ inputs.review_type == 'full' || needs.review.outputs.should-review-commits == 'true' }}
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:
