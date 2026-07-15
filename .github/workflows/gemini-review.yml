@@ -7,9 +7,9 @@ on:
         type: 'string'
         description: Any additional context from the request
         required: false
-      requested_full_review:
-        type: 'boolean'
-        description: Whether a full review (PR and commits) should be performed
+      review_type:
+        type: 'string'
+        description: Type of review requested (default, full, commits)
         required: false
 
 concurrency:

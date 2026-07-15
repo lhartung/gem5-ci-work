@@ -129,6 +129,7 @@ jobs:
       pull-requests: 'write'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
+      review_type: '${{ needs.dispatch.outputs.review_type }}'
     secrets: 'inherit'
 
   fallthrough:
