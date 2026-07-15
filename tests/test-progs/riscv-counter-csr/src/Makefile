@@ -1,14 +1,5 @@
-# Copyright (c) 2026 Arm Limited
+# Copyright (c) 2026 Jaeuk Lee
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,40 +24,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+CROSS_COMPILE ?= riscv64-unknown-elf-
+CC = $(CROSS_COMPILE)gcc
+CFLAGS = -march=rv64imac_zicsr -mabi=lp64 -nostdlib -nostartfiles -static
+LDFLAGS = -Wl,-Ttext=0x80000000 -Wl,-e,_start
+OUT = riscv-counter-csr
 
-from dataclasses import (
-    dataclass,
-    field,
-)
-from typing import (
-    List,
-    Optional,
-    Tuple,
-)
+.PHONY: all clean
 
+all: $(OUT)
 
-@dataclass
-class NoC_Params:
-    """
-    Default parameters for the interconnect. The value of data_width is
-    also used to set the data_channel_size for all CHI controllers.
-    (see configs/ruby/CHI.py)
-    """
+$(OUT): riscv-counter-csr.S
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
-    router_link_latency: int = 1
-    node_link_latency: int = 1
-    router_int_latency: int = 1
-    router_ext_latency: int = 1
-    router_buffer_size: int = 4
-    cntrl_msg_size: int = 8
-    req_int_channels: int = 1
-    snp_int_channels: int = 1
-    rsp_int_channels: int = 1
-    dat_int_channels: int = 1
-    req_ext_channels: int = 1
-    snp_ext_channels: int = 1
-    rsp_ext_channels: int = 1
-    dat_ext_channels: int = 1
-    data_width: int = 32
-    cross_links: List[Tuple[int, int]] = field(default_factory=list)
-    cross_link_latency: int = 0
+clean:
+	rm -f $(OUT)

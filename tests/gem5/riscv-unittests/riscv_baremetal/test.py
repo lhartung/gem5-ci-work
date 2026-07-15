@@ -1,14 +1,5 @@
-# Copyright (c) 2026 Arm Limited
+# Copyright (c) 2026 The Regents of the University of California
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,40 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from dataclasses import (
-    dataclass,
-    field,
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
 )
-from typing import (
-    List,
-    Optional,
-    Tuple,
+from testlib.helper import joinpath
+
+baremetal_tests = (
+    (
+        "riscv-counter-csr",
+        joinpath(
+            config.base_dir,
+            "tests",
+            "test-progs",
+            "riscv-counter-csr",
+            "bin",
+            "riscv",
+            "baremetal",
+            "riscv-counter-csr",
+        ),
+    ),
 )
 
+baremetal_config = joinpath(
+    config.base_dir,
+    "tests",
+    "gem5",
+    "riscv-unittests",
+    "riscv_baremetal",
+    "configs",
+    "riscv_baremetal.py",
+)
 
-@dataclass
-class NoC_Params:
-    """
-    Default parameters for the interconnect. The value of data_width is
-    also used to set the data_channel_size for all CHI controllers.
-    (see configs/ruby/CHI.py)
-    """
-
-    router_link_latency: int = 1
-    node_link_latency: int = 1
-    router_int_latency: int = 1
-    router_ext_latency: int = 1
-    router_buffer_size: int = 4
-    cntrl_msg_size: int = 8
-    req_int_channels: int = 1
-    snp_int_channels: int = 1
-    rsp_int_channels: int = 1
-    dat_int_channels: int = 1
-    req_ext_channels: int = 1
-    snp_ext_channels: int = 1
-    rsp_ext_channels: int = 1
-    dat_ext_channels: int = 1
-    data_width: int = 32
-    cross_links: List[Tuple[int, int]] = field(default_factory=list)
-    cross_link_latency: int = 0
+for test_name, binary in baremetal_tests:
+    gem5_verify_config(
+        name=f"{test_name}-bare-metal",
+        verifiers=(),
+        fixtures=(),
+        config=baremetal_config,
+        config_args=[binary],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=constants.quick_tag,
+    )
