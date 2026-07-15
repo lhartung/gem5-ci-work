@@ -107,6 +107,8 @@ jobs:
               core.setOutput('command', 'fallthrough');
             }
 
+            core.setOutput('review_type', 'full');
+
       - name: 'Acknowledge request'
         env:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
