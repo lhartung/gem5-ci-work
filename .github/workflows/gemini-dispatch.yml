@@ -69,7 +69,6 @@ jobs:
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
       review_type: '${{ github.event.extract_command.outputs.review_type }}'
-      test: '${{ github.event.extract_command.outputs.test }}'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -95,8 +94,6 @@ jobs:
             const request = process.env.REQUEST;
             core.setOutput('request', request);
 
-            core.setOutput('test', 'foobar');
-
             const review_regex = new RegExp("@gemini-cli /review( (?<type>default|full|commits))?( (?<context>.*))?");
             const review_match = request.match(review_regex);
 
@@ -105,8 +102,7 @@ jobs:
             } else if (review_match) {
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
-              core.setOutput('review_type', review_match.groups.type || 'default');
-              console.log('review type: ' + review_match.groups.type);
+              core.setOutput('review_type', 'full');
             } else {
               core.setOutput('command', 'fallthrough');
             }
