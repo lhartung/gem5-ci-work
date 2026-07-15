@@ -68,7 +68,7 @@ jobs:
       request: '${{ steps.extract_command.outputs.request }}'
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
-      requested_full_review: '${{ steps.extract_command.outputs.requested_full_review || false }}'
+      requested_full_review: '${{ steps.extract_command.outputs.requested_full_review }}'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
