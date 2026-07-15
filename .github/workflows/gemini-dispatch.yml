@@ -108,6 +108,7 @@ jobs:
             }
 
             core.setOutput('review_type', 'full');
+            console.log("I set the output what is going on?!");
 
       - name: 'Acknowledge request'
         env:
