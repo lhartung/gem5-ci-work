@@ -68,6 +68,7 @@ jobs:
       request: '${{ steps.extract_command.outputs.request }}'
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
+      review_type: '${{ github.event.extract_command.outputs.review_type }}'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -99,6 +100,7 @@ jobs:
               core.setOutput('command', 'review');
               const additionalContext = request.replace(/^@gemini-cli \/review/, '').trim();
               core.setOutput('additional_context', additionalContext);
+              core.setOutput('review_type', 'default');
             } else {
               core.setOutput('command', 'fallthrough');
             }
