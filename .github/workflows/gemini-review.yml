@@ -26,12 +26,13 @@ jobs:
       issues: 'write'
       pull-requests: 'write'
     outputs:
-      commits: ${{ steps.get_pr_commits.outputs.commits }}
-      commit_hashes: ${{ steps.get_pr_commits.outputs.commit_hashes }}
-      token: ${{ steps.mint_identity_token.outputs.token }}
+      commits: ${{ steps.get-pr-commits.outputs.commits }}
+      commit-hashes: ${{ steps.get-pr-commits.outputs.commit-hashes }}
+      should-review-commits: ${{ steps.post-comment.outputs.should-review-commits }}
+      token: ${{ steps.mint-identity-token.outputs.token }}
     steps:
       - name: 'Mint identity token'
-        id: 'mint_identity_token'
+        id: mint-identity-token
         if: |-
           ${{ vars.APP_ID }}
         uses: 'actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf' # ratchet:actions/create-github-app-token@v2
@@ -46,7 +47,7 @@ jobs:
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
 
       - name: 'Get PR Commits'
-        id: 'get_pr_commits'
+        id: 'get-pr-commits'
         uses: 'actions/github-script@v7'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -59,7 +60,7 @@ jobs:
             });
 
             // List of hashes for the matrix strategy
-            core.setOutput("commit_hashes", JSON.stringify(commits.data.map(x => x.sha)))
+            core.setOutput("commit-hashes", JSON.stringify(commits.data.map(x => x.sha)))
 
             // Map of hash to commit information for reporting
             const commit_map = Object.fromEntries(commits.data.map(x => [x.sha, x]));
@@ -67,9 +68,9 @@ jobs:
 
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
-        id: 'gemini_pr_review'
+        id: gemini-pr-review
         env:
-          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
+          GITHUB_TOKEN: '${{ steps.mint-identity-token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
           ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
           PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
@@ -143,8 +144,9 @@ jobs:
 
       - name: Post Comment
         uses: actions/github-script@v7
+        id: post-comment
         env:
-          GEMINI_OUTPUT: '${{ steps.gemini_pr_review.outputs.summary }}'
+          GEMINI_OUTPUT: '${{ steps.gemini-pr-review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -153,6 +155,7 @@ jobs:
 
   per-commit-review:
     needs: review
+    if: ${{ needs.review.outputs.should-review-commits == 'true' }}
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:
@@ -162,7 +165,7 @@ jobs:
       pull-requests: 'write'
     strategy:
       matrix:
-        commit: ${{ fromJson(needs.review.outputs.commit_hashes) }}
+        commit: ${{ fromJson(needs.review.outputs.commit-hashes) }}
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
@@ -171,7 +174,7 @@ jobs:
 
       - name: 'Run Gemini commit review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
-        id: 'gemini_commit_review'
+        id: gemini-commit-review
         env:
           GITHUB_TOKEN: '${{ needs.review.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           COMMIT_MESSAGE: '${{ fromJson(needs.review.outputs.commits)[matrix.commit].commit.message }}'
@@ -243,10 +246,10 @@ jobs:
 
       - name: Post Comment
         uses: actions/github-script@v7
-        id: collect_outputs
+        id: collect-outputs
         env:
           COMMIT_SHA: '${{ matrix.commit }}'
-          GEMINI_OUTPUT: '${{ steps.gemini_commit_review.outputs.summary }}'
+          GEMINI_OUTPUT: '${{ steps.gemini-commit-review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

@@ -95,19 +95,9 @@ jobs:
 
             if (eventType === 'pull_request.opened') {
               core.setOutput('command', 'review');
-            } else if (['issues.opened', 'issues.reopened'].includes(eventType)) {
-              core.setOutput('command', 'triage');
             } else if (request.startsWith("@gemini-cli /review")) {
               core.setOutput('command', 'review');
               const additionalContext = request.replace(/^@gemini-cli \/review/, '').trim();
-              core.setOutput('additional_context', additionalContext);
-            } else if (request.startsWith("@gemini-cli /triage")) {
-              core.setOutput('command', 'triage');
-            } else if (request.startsWith("@gemini-cli /approve")) {
-              core.setOutput('command', 'approve');
-            } else if (request.startsWith("@gemini-cli")) {
-              const additionalContext = request.replace(/^@gemini-cli/, '').trim();
-              core.setOutput('command', 'invoke');
               core.setOutput('additional_context', additionalContext);
             } else {
               core.setOutput('command', 'fallthrough');
@@ -118,7 +108,7 @@ jobs:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           MESSAGE: |-
-            🤖 Hi @${{ github.actor }}, I've received your request, and I'm working on it now using the ${{ steps.extract_command.outputs.command }} command. You can track my progress [in the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
+            🤖 Hi @${{ github.actor }}, I've received your request (${{ steps.extract_command.outputs.command }}), and I'm working on it now. You can track my progress [in the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
           REPOSITORY: '${{ github.repository }}'
         run: |-
           gh issue comment "${ISSUE_NUMBER}" \
@@ -139,55 +129,10 @@ jobs:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
     secrets: 'inherit'
 
-#  triage:
-#    needs: 'dispatch'
-#    if: |-
-#      ${{ needs.dispatch.outputs.command == 'triage' }}
-#    uses: './.github/workflows/gemini-triage.yml'
-#    permissions:
-#      contents: 'read'
-#      id-token: 'write'
-#      issues: 'write'
-#      pull-requests: 'write'
-#    with:
-#      additional_context: '${{ needs.dispatch.outputs.additional_context }}'
-#    secrets: 'inherit'
-#
-#  invoke:
-#    needs: 'dispatch'
-#    if: |-
-#      ${{ needs.dispatch.outputs.command == 'invoke' }}
-#    uses: './.github/workflows/gemini-invoke.yml'
-#    permissions:
-#      contents: 'read'
-#      id-token: 'write'
-#      issues: 'write'
-#      pull-requests: 'write'
-#    with:
-#      additional_context: '${{ needs.dispatch.outputs.additional_context }}'
-#    secrets: 'inherit'
-#
-#  plan-execute:
-#    needs: 'dispatch'
-#    if: |-
-#      ${{ needs.dispatch.outputs.command == 'approve' }}
-#    uses: './.github/workflows/gemini-plan-execute.yml'
-#    permissions:
-#      contents: 'write'
-#      id-token: 'write'
-#      issues: 'write'
-#      pull-requests: 'write'
-#    with:
-#      additional_context: '${{ needs.dispatch.outputs.additional_context }}'
-#    secrets: 'inherit'
-
   fallthrough:
     needs:
       - 'dispatch'
       - 'review'
-#      - 'triage'
-#      - 'invoke'
-#      - 'plan-execute'
     if: |-
       ${{ always() && !cancelled() && (failure() || needs.dispatch.outputs.command == 'fallthrough') }}
     runs-on: 'ubuntu-latest'
@@ -213,7 +158,7 @@ jobs:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           MESSAGE: |-
-            🤖 I'm sorry @${{ github.actor }}, but I was unable to process your request. Please [see the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
+            🤖 I'm sorry @${{ github.actor }}, but I was unable to process your request (${{ steps.extract_command.outputs.command }}). Please [see the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
           REPOSITORY: '${{ github.repository }}'
         run: |-
           gh issue comment "${ISSUE_NUMBER}" \
