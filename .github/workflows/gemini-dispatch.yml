@@ -103,6 +103,7 @@ jobs:
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
               core.setOutput('review_type', review_match.groups.type || 'default');
+              console.log('review type: ' + review_match.groups.type);
             } else {
               core.setOutput('command', 'fallthrough');
             }
