@@ -94,13 +94,15 @@ jobs:
             const request = process.env.REQUEST;
             core.setOutput('request', request);
 
+            const review_regex = new RegExp("@gemini-cli /review( (?<type>default|full|commits))?( (?<context>.*))?");
+            const review_match = request.match(review_regex);
+
             if (eventType === 'pull_request.opened') {
               core.setOutput('command', 'review');
-            } else if (request.startsWith("@gemini-cli /review")) {
+            } else if (review_match)
               core.setOutput('command', 'review');
-              const additionalContext = request.replace(/^@gemini-cli \/review/, '').trim();
-              core.setOutput('additional_context', additionalContext);
-              core.setOutput('review_type', 'default');
+              core.setOutput('additional_context', review_match.groups.context || '');
+              core.setOutput('review_type', review_match.groups.type || 'default');
             } else {
               core.setOutput('command', 'fallthrough');
             }
