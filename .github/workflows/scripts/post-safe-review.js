@@ -8,7 +8,7 @@ const vagueReport = (response) => `# Safe Pull Request Review
 
    ${response.vagueness.reason}
 
-Code consistency could not be evaluated because the commit message was too vague. The pull request should be reviewed extra carefully for this reason.`;
+Code consistency could not be evaluated because the commit message was too vague. A review of the individual commits will be conducted.`;
 
 
 // Template: pull request review, negative for vagueness
@@ -34,7 +34,7 @@ const parseErrorReport = (response) => `# Safe Pull Request Review
 
 ${response}
 
-Note: an error occurred while parsing the report. The formatting may be incorrect, but the contents may still be helpful.`;
+Note: an error occurred while parsing the report. A review of the individual commitst will be conducted.`;
 
 
 // Template: commit review, positive for vagueness

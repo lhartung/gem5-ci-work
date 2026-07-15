@@ -99,6 +99,12 @@ jobs:
               core.setOutput('command', 'review');
               const additionalContext = request.replace(/^@gemini-cli \/review/, '').trim();
               core.setOutput('additional_context', additionalContext);
+              core.setOutput('requested_full_review', false);
+            } else if (request.startsWith("@gemini-cli /full-review")) {
+              core.setOutput('command', 'review');
+              const additionalContext = request.replace(/^@gemini-cli \/full-review/, '').trim();
+              core.setOutput('additional_context', additionalContext);
+              core.setOutput('requested_full_review', true);
             } else {
               core.setOutput('command', 'fallthrough');
             }
@@ -127,6 +133,7 @@ jobs:
       pull-requests: 'write'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
+      requested_full_review: '${{ needs.dispatch.outputs.requested_full_review }}'
     secrets: 'inherit'
 
   fallthrough:

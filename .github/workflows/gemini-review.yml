@@ -5,7 +5,11 @@ on:
     inputs:
       additional_context:
         type: 'string'
-        description: 'Any additional context from the request'
+        description: Any additional context from the request
+        required: false
+      requested_full_review:
+        type: 'boolean'
+        description: Whether a full review (PR and commits) should be performed
         required: false
 
 concurrency:
@@ -155,7 +159,7 @@ jobs:
 
   per-commit-review:
     needs: review
-    if: ${{ needs.review.outputs.should-review-commits == 'true' }}
+    if: ${{ inputs.requested_full_review || needs.review.outputs.should-review-commits == 'true' }}
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:
