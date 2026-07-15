@@ -102,7 +102,7 @@ jobs:
             } else if (review_match) {
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
-              core.setOutput('review_type', 'full');
+              core.setOutput('review_type', review_match.groups.type || 'default');
             } else {
               core.setOutput('command', 'fallthrough');
             }
