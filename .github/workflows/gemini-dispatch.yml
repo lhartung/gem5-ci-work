@@ -68,7 +68,7 @@ jobs:
       request: '${{ steps.extract_command.outputs.request }}'
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
-      review_type: '${{ github.event.extract_command.outputs.review_type }}'
+      review_type: '${{ steps.extract_command.outputs.review_type }}'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -106,9 +106,6 @@ jobs:
             } else {
               core.setOutput('command', 'fallthrough');
             }
-
-            core.setOutput('review_type', 'full');
-            console.log("I set the output what is going on?!");
 
       - name: 'Acknowledge request'
         env:
