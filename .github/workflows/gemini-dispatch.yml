@@ -100,6 +100,8 @@ jobs:
 
             if (eventType === 'pull_request.opened') {
               core.setOutput('command', 'review');
+              core.setOutput('requested_pr_review', 'true');
+              core.setOutput('requested_commit_review', 'false');
             } else if (review_match) {
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
