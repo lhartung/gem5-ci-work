@@ -167,7 +167,7 @@ jobs:
 
   per-commit-review:
     needs: review
-    if: ${{ inputs.requested_commit_review == 'true' || steps.review.outputs.should-review-commits == 'true' }}
+    if: ${{ inputs.requested_commit_review == 'true' || needs.review.outputs.should-review-commits == 'true' }}
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:
