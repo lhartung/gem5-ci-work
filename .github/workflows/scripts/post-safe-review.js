@@ -34,7 +34,7 @@ const parseErrorReport = (response) => `# Safe Pull Request Review
 
 ${response}
 
-Note: an error occurred while parsing the report. A review of the individual commitst will be conducted.`;
+Note: an error occurred while parsing the report. A review of the individual commits will be conducted.`;
 
 
 // Template: commit review, positive for vagueness
