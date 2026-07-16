@@ -7,11 +7,16 @@ on:
         type: 'string'
         description: Any additional context from the request
         required: false
-      review_type:
+      requested_pr_review:
         type: 'string'
-        description: Type of review requested (full, pr, commits)
+        description: Whether a pull request review was requested ('true' or 'false')
         required: false
-        default: 'pr'
+        default: 'true'
+      requested_commit_review:
+        type: 'string'
+        description: Whether a commit review was requested ('true' or 'false')
+        required: false
+        default: 'false'
 
 concurrency:
   group: '${{ github.workflow }}-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
@@ -54,7 +59,7 @@ jobs:
       - name: 'Run Gemini pull request review'
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
         id: gemini-pr-review
-        if: ${{ inputs.review_type == 'full' || inputs.review_type == 'pr' }}
+        if: ${{ inputs.requested_pr_review == 'true' }}
         env:
           GITHUB_TOKEN: '${{ steps.mint-identity-token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
@@ -141,7 +146,7 @@ jobs:
 
       - name: 'Get PR Commits'
         id: 'get-pr-commits'
-        if: ${{ inputs.review_type == 'full' || steps.review.outputs.should-review-commits == 'true' }}
+        if: ${{ inputs.requested_commit_review == 'true' || steps.review.outputs.should-review-commits == 'true' }}
         uses: 'actions/github-script@v7'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +167,7 @@ jobs:
 
   per-commit-review:
     needs: review
-    if: ${{ inputs.review_type == 'full' || needs.review.outputs.should-review-commits == 'true' }}
+    if: ${{ inputs.requested_commit_review == 'true' || steps.review.outputs.should-review-commits == 'true' }}
     runs-on: 'ubuntu-latest'
     timeout-minutes: 30
     permissions:

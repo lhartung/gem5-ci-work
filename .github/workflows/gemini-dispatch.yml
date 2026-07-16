@@ -68,7 +68,8 @@ jobs:
       request: '${{ steps.extract_command.outputs.request }}'
       additional_context: '${{ steps.extract_command.outputs.additional_context }}'
       issue_number: '${{ github.event.pull_request.number || github.event.issue.number }}'
-      review_type: '${{ steps.extract_command.outputs.review_type }}'
+      requested_pr_review: '${{ steps.extract_command.outputs.requested_pr_review }}'
+      requested_commit_review: '${{ steps.extract_command.outputs.requested_commit_review }}'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -102,7 +103,17 @@ jobs:
             } else if (review_match) {
               core.setOutput('command', 'review');
               core.setOutput('additional_context', review_match.groups.context || '');
-              core.setOutput('review_type', review_match.groups.type || 'pr');
+
+              if (review_match.groups.type == "full") {
+                core.setOutput('requested_pr_review', 'true');
+                core.setOutput('requested_commit_review', 'true');
+              } else if (review_match.groups.type == "commits") {
+                core.setOutput('requested_pr_review', 'false');
+                core.setOutput('requested_commit_review', 'true');
+              } else {
+                core.setOutput('requested_pr_review', 'true');
+                core.setOutput('requested_commit_review', 'false');
+              }
             } else {
               core.setOutput('command', 'fallthrough');
             }
@@ -131,7 +142,8 @@ jobs:
       pull-requests: 'write'
     with:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
-      review_type: '${{ needs.dispatch.outputs.review_type }}'
+      requested_pr_review: '${{ needs.dispatch.outputs.requested_pr_review }}'
+      requested_commit_review: '${{ needs.dispatch.outputs.requested_commit_review }}'
     secrets: 'inherit'
 
   fallthrough:
