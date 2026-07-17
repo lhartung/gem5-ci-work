@@ -136,7 +136,7 @@ jobs:
     needs: 'dispatch'
     if: |-
       ${{ needs.dispatch.outputs.command == 'review' }}
-    uses: VulcanToolkit/github-action/vulcan-review.yml@main
+    uses: './.github/workflows/vulcan-review.yml'
     permissions:
       contents: 'read'
       id-token: 'write'
