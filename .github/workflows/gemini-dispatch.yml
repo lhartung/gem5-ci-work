@@ -146,7 +146,9 @@ jobs:
       additional_context: '${{ needs.dispatch.outputs.additional_context }}'
       requested_pr_review: '${{ needs.dispatch.outputs.requested_pr_review }}'
       requested_commit_review: '${{ needs.dispatch.outputs.requested_commit_review }}'
-    secrets: 'inherit'
+    secrets:
+      gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 
   fallthrough:
     needs:
