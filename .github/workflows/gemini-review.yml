@@ -129,9 +129,9 @@ jobs:
             }
           extensions: |
             [
-              "https://github.com/lhartung/safe-review"
+              "https://github.com/VulcanToolkit/gemini-extension"
             ]
-          prompt: '/safe-review-pr'
+          prompt: '/vulcan-review-pr'
 
       - name: Post Comment
         id: post-comment
@@ -253,9 +253,9 @@ jobs:
             }
           extensions: |
             [
-              "https://github.com/lhartung/safe-review"
+              "https://github.com/VulcanToolkit/gemini-extension"
             ]
-          prompt: '/safe-review-commit'
+          prompt: '/vulcan-review-commit'
 
       - name: Post Comment
         uses: actions/github-script@v7
