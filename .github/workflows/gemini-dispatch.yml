@@ -148,7 +148,7 @@ jobs:
       requested_commit_review: '${{ needs.dispatch.outputs.requested_commit_review }}'
     secrets:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 
   fallthrough:
     needs:
