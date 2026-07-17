@@ -1,16 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2012,2017 ARM Limited
+# Copyright (c) 2026 Rajesh Gangam
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,13 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Probe import *
+from m5.params import *
 
-# Only build if we have protobuf support
-if env['CONF']['HAVE_PROTOBUF']:
-    ProtoBuf('inst_dep_record.proto', tags=['protobuf'])
-    ProtoBuf('packet.proto', tags=['protobuf'])
-    ProtoBuf('inst.proto', tags=['protobuf'])
-    ProtoBuf('etrace.proto', tags=['protobuf'])
-    Source('protobuf.cc', tags=['protobuf'])
-    Source('protoio.cc', tags=['protobuf'])
+
+class ETrace(ProbeListenerObject):
+    type = "ETrace"
+    cxx_class = "gem5::o3::ETrace"
+    cxx_header = "cpu/o3/probe/etrace.hh"
+
+    traceFile = Param.String(
+        "etrace.pb.gz", "Output file for E-Trace packets (protobuf)"
+    )
+    startTraceInst = Param.UInt64(
+        0, "Instruction count after which to start tracing"
+    )
+    resyncPeriod = Param.UInt64(
+        10000, "Instructions between periodic resync packets"
+    )
