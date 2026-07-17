@@ -95,7 +95,7 @@ jobs:
             const request = process.env.REQUEST;
             core.setOutput('request', request);
 
-            const review_regex = new RegExp("@gemini-cli /review( (?<type>full|pr|commits))?( (?<context>.*))?");
+            const review_regex = new RegExp("@VulcanToolkit /review( (?<type>full|pr|commits))?( (?<context>.*))?");
             const review_match = request.match(review_regex);
 
             if (eventType === 'pull_request.opened') {
@@ -136,7 +136,7 @@ jobs:
     needs: 'dispatch'
     if: |-
       ${{ needs.dispatch.outputs.command == 'review' }}
-    uses: './.github/workflows/gemini-review.yml'
+    uses: './.github/workflows/vulcan-review.yml'
     permissions:
       contents: 'read'
       id-token: 'write'

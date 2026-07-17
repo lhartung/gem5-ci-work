@@ -1,4 +1,4 @@
-name: '🔎 Gemini Review'
+name: '🔎 Vulcan Review'
 
 on:
   workflow_call:
@@ -41,7 +41,7 @@ jobs:
       should-review-commits: ${{ steps.post-comment.outputs.should-review-commits }}
       token: ${{ steps.mint-identity-token.outputs.token }}
     steps:
-      - name: 'Mint identity token'
+      - name: Mint identity token
         id: mint-identity-token
         if: |-
           ${{ vars.APP_ID }}
@@ -53,12 +53,12 @@ jobs:
           permission-issues: 'write'
           permission-pull-requests: 'write'
 
-      - name: 'Checkout repository'
+      - name: Checkout repository
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
 
-      - name: 'Run Gemini pull request review'
+      - name: Run Vulcan pull request review
+        id: vulcan-pr-review
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
-        id: gemini-pr-review
         if: ${{ inputs.requested_pr_review == 'true' }}
         env:
           GITHUB_TOKEN: '${{ steps.mint-identity-token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
@@ -138,11 +138,11 @@ jobs:
         if: ${{ inputs.requested_pr_review == 'true' }}
         uses: actions/github-script@v7
         env:
-          GEMINI_OUTPUT: '${{ steps.gemini-pr-review.outputs.summary }}'
+          GEMINI_OUTPUT: '${{ steps.vulcan-pr-review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { postPullRequestReview } = require('./.github/workflows/scripts/post-safe-review.js');
+            const { postPullRequestReview } = require('./.github/workflows/scripts/post-vulcan-review.js');
             return await postPullRequestReview(github, context, core);
 
       - name: Get PR Commits
@@ -180,14 +180,14 @@ jobs:
       matrix:
         commit: ${{ fromJson(needs.review.outputs.commit-hashes) }}
     steps:
-      - name: 'Checkout repository'
+      - name: Checkout repository
         uses: 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' # ratchet:actions/checkout@v6
         with:
           ref: '${{ matrix.commit }}'
 
-      - name: 'Run Gemini commit review'
+      - name: Run Vulcan commit review
+        id: vulcan-commit-review
         uses: 'google-github-actions/run-gemini-cli@v0.1.21' # ratchet:exclude
-        id: gemini-commit-review
         env:
           GITHUB_TOKEN: '${{ needs.review.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           COMMIT_MESSAGE: '${{ fromJson(needs.review.outputs.commits)[matrix.commit].commit.message }}'
@@ -262,19 +262,19 @@ jobs:
         id: collect-outputs
         env:
           COMMIT_SHA: '${{ matrix.commit }}'
-          GEMINI_OUTPUT: '${{ steps.gemini-commit-review.outputs.summary }}'
+          GEMINI_OUTPUT: '${{ steps.vulcan-commit-review.outputs.summary }}'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const content = process.env.GEMINI_OUTPUT;
-            fs.writeFileSync(`safe-review-${process.env.COMMIT_SHA}.txt`, content);
+            fs.writeFileSync(`vulcan-review-${process.env.COMMIT_SHA}.txt`, content);
 
       - name: Create review artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: safe-review-${{ matrix.commit }}
-          path: safe-review-${{ matrix.commit }}.txt
+          name: vulcan-review-${{ matrix.commit }}
+          path: vulcan-review-${{ matrix.commit }}.txt
 
   finish-per-commit-review:
     needs: [review, per-commit-review]
@@ -291,7 +291,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: safe-review-*
+          pattern: vulcan-review-*
           merge-multiple: true
 
       - name: Post Comment
@@ -301,5 +301,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { postAggregateCommitReview } = require('./.github/workflows/scripts/post-safe-review.js');
+            const { postAggregateCommitReview } = require('./.github/workflows/scripts/post-vulcan-review.js');
             return await postAggregateCommitReview(github, context, core);
