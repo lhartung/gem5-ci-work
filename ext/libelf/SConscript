@@ -146,7 +146,8 @@ m4env.Append(CPPPATH=[Dir('.'), Dir('.').srcnode()])
 m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 
 # Generate the native-elf-format header file based on the build system
-m4env.Command(File('native-elf-format.h'), File('native-elf-format'),
+m4env.Command(File('native-elf-format.h'),
+              File('native-elf-format').srcnode(),
               '${SOURCE} > ${TARGET}')
 
 env.Prepend(CPPPATH=Dir('.').srcnode())
