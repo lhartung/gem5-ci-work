@@ -108,7 +108,7 @@ jobs:
         needs: dispatch
         if: |-
             ${{ needs.dispatch.outputs.command == 'review' }}
-        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@main
+        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@0f1ca599206aa67fdd65f78a00a73c1a696d5a63 # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.4
         permissions:
             contents: read
             pull-requests: write
